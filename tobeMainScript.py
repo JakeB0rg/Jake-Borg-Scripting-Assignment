@@ -1,6 +1,36 @@
 import socket
 import ssl
+import sqlite3
 
+DATABASE_PATH = 'RouterDatabase.db'
+
+def init_database():
+                conn = sqlite3.connect(DATABASE_PATH)
+                cursor = conn.cursor()
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS backup_schedule (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        hour INTEGER NOT NULL,
+                        minute INTEGER NOT NULL
+                    )
+                ''')
+                conn.commit()
+                conn.close()
+
+def input_database(hour, minute):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            REPLACE INTO backup_schedule (id, hour, minute)
+            VALUES (1, ?, ?)
+        ''', (hour, minute))
+        conn.commit()
+        print(f"Time inputted successfully")
+    except sqlite3.IntegrityError:
+        print(f"Error")
+    finally:
+        conn.close()
 
 def send_request(request):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,12 +47,14 @@ def send_request(request):
                                             
 
 if __name__ == "__main__":
+    init_database()
     while True:
         print("\nOptions:")
         print("1. Add Router")
         print("2. Delete Router")
         print("3. List Routers")
-        print("4. Exit")
+        print("4. Set Backup Time")
+        print("5. Exit")
 
         choice = input("Enter your choice (1-4): ")
 
@@ -36,6 +68,12 @@ if __name__ == "__main__":
         elif choice == '3':
             send_request("LIST")
         elif choice == '4':
+             # Option to set backup time
+            hour = int(input("Enter backup hour (0-23): "))
+            minute = int(input("Enter backup minute (0-59): "))
+            input_database(hour, minute)
+            
+        elif choice == '5':
             break
         else:
             print("Invalid choice. Please enter a number between 1 and 4.")
