@@ -10,7 +10,7 @@ DATABASE_PATH = 'RouterDatabase.db'
 # GitHub repository details
 GITHUB_TOKEN = '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'
 GITHUB_REPO_OWNER = 'JakeB0rg'
-GITHUB_REPO_NAME = 'your_github_repo_name'
+GITHUB_REPO_NAME = 'Jake-Borg-Scripting-Assignment'
 
 def init_database():
     conn = sqlite3.connect(DATABASE_PATH)
