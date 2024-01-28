@@ -9,19 +9,17 @@ github_token = "github_pat_11BDFVHTI0dY8WlNr81FFm_wqONlU3n91RF5LD64P1ZtuxsPQacnz
 repo_name = "Jake-Borg-Scripting-Assignment"
 
 def get_backup_schedule():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT hour, minute FROM backup_schedule')
-    schedule = cursor.fetchone()
-    conn.close()
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT hour, minute FROM backup_schedule')
+        schedule = cursor.fetchone()
     return schedule
 
 def get_router_list():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT ip, admin_username, admin_password FROM routers')
-    routers = cursor.fetchall()
-    conn.close()
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT ip, admin_username, admin_password FROM routers')
+        routers = cursor.fetchall()
     return routers
 
 def backup_router(router_ip, username, password):
@@ -92,7 +90,8 @@ def main():
                         print(f"Backup for {router_ip} completed.")
 
         # Sleep for half a minute before checking again
-        time.sleep(30)
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
+    

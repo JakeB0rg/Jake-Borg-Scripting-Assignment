@@ -43,13 +43,16 @@ def delete_router(ip):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM routers WHERE ip = ?", (ip,))
     if cursor.rowcount > 0:
-        print(f"Router with IP '{ip}' deleted successfully.")
+        print(f"Router with IP '{ip}' deleted successfully.")    
+        conn.commit()
+        conn.close()
         return f"Router with IP '{ip}' deleted successfully"
     else:
         print(f"Error: No router found with IP '{ip}'.")
+        conn.commit()
+        conn.close()
         return f"No router found with IP '{ip}'."
-    conn.commit()
-    conn.close()
+
 
 def list_routers():
     conn = sqlite3.connect(DATABASE_PATH)
@@ -59,10 +62,11 @@ def list_routers():
     for router in routers:
         print(f"ID: {router[0]}, Name: {router[1]}, IP: {router[2]}, Username: {router[3]}, Password: {router[4]}")
     routers_info = []
+    conn.close()
     for router in routers:
         routers_info.append(f"ID: {router[0]}, Name: {router[1]}, IP: {router[2]}, Username: {router[3]}, Password: {router[4]}")
     return "\n".join(routers_info)
-    conn.close()
+
 
 def start_server():
     init_database()
