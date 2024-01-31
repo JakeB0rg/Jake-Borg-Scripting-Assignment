@@ -2,10 +2,11 @@ import time
 import paramiko
 from github import Github
 import sqlite3
+import socket
 
 # Replace these with your own database and GitHub credentials
 db_path = "RouterDatabase.db"
-github_token = "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"
+github_token = "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"
 repo_name = "Jake-Borg-Scripting-Assignment"
 
 def get_backup_schedule():
@@ -24,29 +25,34 @@ def get_router_list():
 
 def backup_router(router_ip, username, password):
     try:
-        # SSH connection
+        # Create SSH client object
         ssh_client = paramiko.SSHClient()
+
+        # Set the policy to automatically add the host keys
         ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_client.connect(router_ip, username=username, password=password)
+
+        # Connect to the router using the specified cipher and key exchange algorithms
+        ssh_client.connect(router_ip, username=username, password=password, allow_agent=False, look_for_keys=False)
 
         # Get running configuration
         stdin, stdout, stderr = ssh_client.exec_command("show running-config")
         running_config = stdout.read().decode()
 
+        print(running_config)
+
         # Save to a local file
         filename = f"{router_ip}.config"
         with open(filename, "w") as file:
             file.write(running_config)
-
-        # Close SSH connection
+    
+    finally:
+        # Close the SSH connection
         ssh_client.close()
 
-        return filename
-    except Exception as e:
-        print(f"Error backing up {router_ip}: {str(e)}")
-        return None
+    return filename
+ 
 
-def upload_to_github(filename):
+def upload_to_github(filename, github_token, repo_name):
     try:
         # Authenticate with GitHub
         g = Github(github_token)
@@ -86,7 +92,7 @@ def main():
                     router_ip, admin_username, admin_password = router
                     backup_filename = backup_router(router_ip, admin_username, admin_password)
                     if backup_filename:
-                        upload_to_github(backup_filename)
+                        upload_to_github(backup_filename, github_token, repo_name)
                         print(f"Backup for {router_ip} completed.")
 
         # Sleep for half a minute before checking again
