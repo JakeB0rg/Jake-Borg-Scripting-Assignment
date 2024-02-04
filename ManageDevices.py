@@ -5,7 +5,7 @@ import os
 
 DATABASE_PATH = 'RouterDatabase.db'
 
-def init_database():
+def init_database(): #this creates the table where the router data will be stored
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute('''
@@ -20,13 +20,13 @@ def init_database():
     conn.commit()
     conn.close()
 
-def add_router(name, ip):
+def add_router(name, ip): #this function adds a router to the database
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute('''
             INSERT INTO routers (name, ip, admin_username, admin_password)
-            VALUES (?, ?, 'Admin', 'Pa$$w0rd')
+            VALUES (?, ?, 'cisco', 'cisco')
         ''', (name, ip))
         conn.commit()
         print(f"Router '{name}' added successfully.")
@@ -38,7 +38,7 @@ def add_router(name, ip):
         conn.close()
         
 
-def delete_router(ip):
+def delete_router(ip): #and this one removes a router from the database
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM routers WHERE ip = ?", (ip,))
@@ -54,7 +54,7 @@ def delete_router(ip):
         return f"No router found with IP '{ip}'."
 
 
-def list_routers():
+def list_routers(): #this lists the routers
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, ip, admin_username, admin_password FROM routers")
@@ -68,13 +68,12 @@ def list_routers():
     return "\n".join(routers_info)
 
 
-def start_server():
+def start_server(): #this starts the server side of the socket
     init_database()
 
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER) 
     
-    # Adjust the file paths as needed
-    ssl_context.load_cert_chain(certfile='homeserver-cert.pem', keyfile='homeserver-key.pem')
+    ssl_context.load_cert_chain(certfile='homeserver-cert.pem', keyfile='homeserver-key.pem') #uses the cert and key
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', 12345))
@@ -89,19 +88,18 @@ def start_server():
             ssl_socket = ssl_context.wrap_socket(client_socket, server_side=True)
 
             request = ssl_socket.recv(1024).decode('utf-8')
-            if request.startswith("ADD"):
+            if request.startswith("ADD"): #this is what runs the add function.
                 _, name, ip = request.split()
                 response = add_router(name, ip)
-            elif request.startswith("DELETE"):
+            elif request.startswith("DELETE"):  #this runs the delete
                 _, ip = request.split()
                 response = delete_router(ip)
-            elif request.startswith("LIST"):
+            elif request.startswith("LIST"):    #this runs the list function.
                 response = list_routers()
             else:
                 response = "Invalid request."
 
-            # Send the response back to the client
-            ssl_socket.send(response.encode('utf-8'))
+            ssl_socket.send(response.encode('utf-8')) #responses are sent back to the client, ie main program.
 
             ssl_socket.close()
     except KeyboardInterrupt:
